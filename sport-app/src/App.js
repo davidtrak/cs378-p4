@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { getDatabase, ref, child, get, push, update } from "firebase/database";
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -42,6 +42,16 @@ const Login = () => {
           console.log(error);
         });
       }).catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        alert (errorMessage);
+      });
+  };
+
+  const handleSignUp = async () => {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then( handleLogin )
+      .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
         alert (errorMessage);
@@ -90,6 +100,7 @@ const Login = () => {
           <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
           <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
           <button onClick={handleLogin}>Login</button>
+          <button onClick={handleSignUp}>Sign Up</button>
         </div>
       )}
     </div>
