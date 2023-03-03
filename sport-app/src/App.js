@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
+import { getDatabase, ref, child, get } from "firebase/database";
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,33 +10,46 @@ const Login = () => {
   const [favoriteSports, setFavoriteSports] = useState([]);
   const [sport, setSport] = useState("");
 
+  const firebaseConfig = {
+    databaseURL: process.env.REACT_APP_DB_URL,
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const database = getDatabase(app);
+  const auth = getAuth(app);
+
   const handleLogin = async () => {
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
+      await auth.signInWithEmailAndPassword(email, password);
       setLoggedIn(true);
-      // Retrieve the user's favorite sports from the database
-      const userRef = firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid);
-      const doc = await userRef.get();
-      if (doc.exists) {
-        setFavoriteSports(doc.data().favoriteSports);
-      }
+      // Get user's favorite sports from the database
+      const dbRef = ref(database);
+      get (child(dbRef, 'users/' + auth.currentUser.uid + '/favoriteSports')).then((snapshot) => {
+        if (snapshot.exists()) {
+          setFavoriteSports(snapshot.val());
+        } else {  
+          console.log("No data available");
+        }
+      });
     } catch (error) {
       console.error(error);
     }
   };
 
   const handleLogout = () => {
-    firebase.auth().signOut();
+    auth.signOut();
     setLoggedIn(false);
   };
 
   const handleAddSport = async () => {
     try {
       // Update the user's favorite sports in the database
-      const userRef = firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid);
-      await userRef.update({
-        favoriteSports: firebase.firestore.FieldValue.arrayUnion(sport)
-      });
+      const newKey = push(child(ref(database), 'users/' + auth.currentUser.uid + '/favoriteSports')).key;
+      
+      const updates = {};
+      updates['/users/' + auth.currentUser.uid + '/favoriteSports/' + newKey] = sport;
+      await update(ref(database), updates);
+
       setFavoriteSports([...favoriteSports, sport]);
     } catch (error) {
       console.error(error);
