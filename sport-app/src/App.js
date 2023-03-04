@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getDatabase, ref, child, get, push, update } from "firebase/database";
+import { getDatabase, ref, child, get, push, set } from "firebase/database";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
@@ -34,7 +34,7 @@ const Login = () => {
         // Get user's favorite sports
         get(child(ref(database), 'users/' + user.uid + '/favoriteSports')).then((snapshot) => {
           if (snapshot.exists()) {
-            setFavoriteSports(snapshot.val());
+            setFavoriteSports(Object.values(snapshot.val()));
           } else {
             console.log("No data available");
           }
@@ -44,17 +44,16 @@ const Login = () => {
       }).catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        alert (errorMessage);
+        alert(errorMessage);
       });
   };
 
   const handleSignUp = async () => {
     createUserWithEmailAndPassword(auth, email, password)
-      .then( handleLogin )
+      .then(handleLogin)
       .catch((error) => {
-        const errorCode = error.code;
         const errorMessage = error.message;
-        alert (errorMessage);
+        alert(errorMessage);
       });
   };
 
@@ -66,11 +65,8 @@ const Login = () => {
   const handleAddSport = async () => {
     try {
       // Update the user's favorite sports in the database
-      const newKey = push(child(ref(database), 'users/' + auth.currentUser.uid + '/favoriteSports')).key;
-
-      const updates = {};
-      updates['/users/' + auth.currentUser.uid + '/favoriteSports/' + newKey] = sport;
-      await update(ref(database), updates);
+      const newSportRef = push(child(ref(database), 'users/' + auth.currentUser.uid + '/favoriteSports'));
+      set(newSportRef, sport);
 
       setFavoriteSports([...favoriteSports, sport]);
     } catch (error) {
@@ -87,11 +83,16 @@ const Login = () => {
           <input type="text" placeholder="Sport" value={sport} onChange={(e) => setSport(e.target.value)} />
           <button onClick={handleAddSport}>Add</button>
           <h2>Your favorite sports:</h2>
-          <ul>
-            {favoriteSports.map((sport) => (
-              <li key={sport}>{sport}</li>
-            ))}
-          </ul>
+
+          {favoriteSports !== null && favoriteSports.length === 0 ? (
+            <p>You have no favorite sports.</p>
+          ) :
+            <ul>
+              {favoriteSports.map((sport) => (
+                <li key={sport}>{sport}</li>
+              ))}
+            </ul>
+          }
           <button onClick={handleLogout}>Logout</button>
         </div>
       ) : (
