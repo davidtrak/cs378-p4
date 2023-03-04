@@ -3,26 +3,61 @@ import { getDatabase, ref, child, get, push, set } from "firebase/database";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
-const Login = () => {
+const firebaseConfig = {
+  apiKey: "AIzaSyCZQov0j_wjmq3_xsCseNGIuR8zljaj8dQ",
+  authDomain: "p4-cs378.firebaseapp.com",
+  databaseURL: "https://p4-cs378-default-rtdb.firebaseio.com",
+  projectId: "p4-cs378",
+  storageBucket: "p4-cs378.appspot.com",
+  messagingSenderId: "696321451787",
+  appId: "1:696321451787:web:10c81d7bac39b4805da40e"
+};
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const auth = getAuth(app);
+
+const LoginForm = (props) => {
+  return (
+    <div>
+      <h1>Login</h1>
+      <input type="email" placeholder="Email" value={props.email} onChange={(e) => props.setEmail(e.target.value)} />
+      <input type="password" placeholder="Password" value={props.password} onChange={(e) => props.setPassword(e.target.value)} />
+      <button onClick={props.handleLogin}>Login</button>
+      <button onClick={props.handleSignUp}>Sign Up</button>
+    </div>
+  );
+}
+
+const SportsList = (props) => {
+  return (
+    <div>
+      <h1>Welcome, {props.email}!</h1>
+      <h3>Add a favorite sport:</h3>
+      <input type="text" placeholder="Sport" value={props.sport} onChange={(e) => props.setSport(e.target.value)} />
+      <button onClick={props.handleAddSport}>Add</button>
+      <h2>Your favorite sports:</h2>
+
+      {props.favoriteSports.length === 0 ? (
+        <p>You have no favorite sports.</p>
+      ) :
+        <ul>
+          {props.favoriteSports.map((sport) => (
+            <li key={sport}>{sport}</li>
+          ))}
+        </ul>
+      }
+    </div>
+  );
+}
+
+
+const App = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [favoriteSports, setFavoriteSports] = useState([]);
   const [sport, setSport] = useState("");
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCZQov0j_wjmq3_xsCseNGIuR8zljaj8dQ",
-    authDomain: "p4-cs378.firebaseapp.com",
-    databaseURL: "https://p4-cs378-default-rtdb.firebaseio.com",
-    projectId: "p4-cs378",
-    storageBucket: "p4-cs378.appspot.com",
-    messagingSenderId: "696321451787",
-    appId: "1:696321451787:web:10c81d7bac39b4805da40e"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase(app);
-  const auth = getAuth(app);
 
   const handleLogin = async () => {
     signInWithEmailAndPassword(auth, email, password)
@@ -42,9 +77,7 @@ const Login = () => {
           console.log(error);
         });
       }).catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        alert(errorMessage);
+        alert(error.message);
       });
   };
 
@@ -52,8 +85,7 @@ const Login = () => {
     createUserWithEmailAndPassword(auth, email, password)
       .then(handleLogin)
       .catch((error) => {
-        const errorMessage = error.message;
-        alert(errorMessage);
+        alert(error.message);
       });
   };
 
@@ -78,34 +110,15 @@ const Login = () => {
     <div style={{ textAlign: "center" }}>
       {loggedIn ? (
         <div>
-          <h1>Welcome, {email}!</h1>
-          <h3>Add a favorite sport:</h3>
-          <input type="text" placeholder="Sport" value={sport} onChange={(e) => setSport(e.target.value)} />
-          <button onClick={handleAddSport}>Add</button>
-          <h2>Your favorite sports:</h2>
-
-          {favoriteSports !== null && favoriteSports.length === 0 ? (
-            <p>You have no favorite sports.</p>
-          ) :
-            <ul>
-              {favoriteSports.map((sport) => (
-                <li key={sport}>{sport}</li>
-              ))}
-            </ul>
-          }
+          <SportsList {...{ email, favoriteSports, sport, setSport, handleAddSport }} />
           <button onClick={handleLogout}>Logout</button>
         </div>
       ) : (
-        <div>
-          <h1>Login</h1>
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button onClick={handleLogin}>Login</button>
-          <button onClick={handleSignUp}>Sign Up</button>
-        </div>
-      )}
-    </div>
+        <LoginForm {...{ email, setEmail, password, setPassword, handleLogin, handleSignUp }} />
+      )
+      }
+    </div >
   );
 };
 
-export default Login;
+export default App;
