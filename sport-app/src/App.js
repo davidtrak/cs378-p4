@@ -90,6 +90,13 @@ const App = () => {
   };
 
   const handleLogout = () => {
+    // clear state
+    setEmail("");
+    setPassword("");
+    setFavoriteSports([]);
+    setSport("");
+
+    // sign out
     auth.signOut();
     setLoggedIn(false);
   };
