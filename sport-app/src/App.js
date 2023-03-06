@@ -108,6 +108,7 @@ const App = () => {
       set(newSportRef, sport);
 
       setFavoriteSports([...favoriteSports, sport]);
+      setSport("");
     } catch (error) {
       console.error(error);
     }
